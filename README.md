@@ -1,0 +1,2 @@
+# CanMoveCollectionCell
+可以拖动排序的UICollectionView
