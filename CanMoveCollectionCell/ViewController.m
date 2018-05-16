@@ -19,6 +19,7 @@
 
 @property (nonatomic, strong) UICollectionView *collectionView;
 @property (nonatomic, strong) NSMutableArray *dataArr;
+@property (nonatomic, strong) NSMutableArray *secondDataArr;
 @property (nonatomic, strong) NSIndexPath *oldIndexPath;
 @property (nonatomic, strong) NSIndexPath *moveIndexPath;
 @property (nonatomic, strong) UIView *snapshotView;
@@ -45,11 +46,21 @@
 {
     if (!_dataArr) {
         _dataArr = @[].mutableCopy;
-        for (NSInteger i = 0; i < 100; i++) {
+        for (NSInteger i = 0; i < 6; i++) {
             [_dataArr addObject:[UIColor colorWithRed:arc4random()%255/255.0f green:arc4random()%255/255.0f blue:arc4random()%255/255.0f alpha:1]];
         }
     }
     return _dataArr;
+}
+- (NSMutableArray *)secondDataArr
+{
+    if (!_secondDataArr) {
+        _secondDataArr = @[].mutableCopy;
+        for (NSInteger i = 0; i < 6; i++) {
+            [_secondDataArr addObject:[UIColor colorWithRed:arc4random()%255/255.0f green:arc4random()%255/255.0f blue:arc4random()%255/255.0f alpha:1]];
+        }
+    }
+    return _secondDataArr;
 }
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -81,12 +92,28 @@
 
 - (void)collectionView:(UICollectionView*)collectionView moveItemAtIndexPath:(NSIndexPath*)sourceIndexPath toIndexPath:(NSIndexPath*)destinationIndexPath
 {
-    //取出移动row数据
-    id color =self.dataArr[sourceIndexPath.row];
-    //从数据源中移除该数据
-    [self.dataArr removeObject:color];
-    //将数据插入到数据源中的目标位置
-    [self.dataArr insertObject:color atIndex:destinationIndexPath.row];
+    if (sourceIndexPath.section == 0) {
+        //取出移动row数据
+        id color =self.dataArr[sourceIndexPath.item];
+        //从数据源中移除该数据
+        [self.dataArr removeObject:color];
+        if (destinationIndexPath.section == 0) {
+            //将数据插入到数据源中的目标位置
+            [self.dataArr insertObject:color atIndex:destinationIndexPath.item];
+        }else{
+            [self.secondDataArr insertObject:color atIndex:destinationIndexPath.item];
+        }
+    }else{
+        id color = self.secondDataArr[sourceIndexPath.item];
+        [self.secondDataArr removeObject:color];
+        if (destinationIndexPath.section == 0) {
+            //将数据插入到数据源中的目标位置
+            [self.dataArr insertObject:color atIndex:destinationIndexPath.item];
+        }else{
+            [self.secondDataArr insertObject:color atIndex:destinationIndexPath.item];
+        }
+    }
+    [self.collectionView reloadData];
 }
 
 - (void)iOS9_Action:(UILongPressGestureRecognizer*)longPress
@@ -195,16 +222,27 @@
         }break;
     }
 }
-
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
+{
+    return 2;
+}
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
 {
-    return self.dataArr.count;
+    if (section == 0) {
+        return self.dataArr.count;
+    }else{
+        return self.secondDataArr.count;
+    }
 }
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
 {
     CollectionViewCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"CollectionViewCell" forIndexPath:indexPath];
     cell.testLabel.text = @(indexPath.item).stringValue;
-    cell.backgroundColor = [self.dataArr objectAtIndex:indexPath.item];
+    if (indexPath.section == 0) {
+        cell.backgroundColor = [self.dataArr objectAtIndex:indexPath.item];
+    }else{
+        cell.backgroundColor = [self.secondDataArr objectAtIndex:indexPath.item];
+    }
     return cell;
 }
 - (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
@@ -215,7 +253,6 @@
 {
     return UIEdgeInsetsMake(5, 5, 5, 5);
 }
-
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
